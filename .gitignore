@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Working space for Lambda Layers
+.DS_Store
+*.zip
+/python/*/python/

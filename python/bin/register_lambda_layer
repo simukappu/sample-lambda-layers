@@ -1,0 +1,67 @@
+#!/bin/bash
+
+################################################################################
+# Shell script tool to register common functions with AWS Lambda Layers        #
+#                                                                              #
+# @auther: Shota Yamazaki                                                      #
+################################################################################
+
+function usage() {
+cat <<_EOT_
+Usage:
+  register-lambda-layer [-d description] [-r compatible-runtimes] [-z zip-file-name] [-h | <options>] layer-name
+Description:
+  Shell script tool to register common functions with AWS Lambda Layers
+_EOT_
+exit 1
+}
+
+DESCRIPTION="Created by register-lambda-layer"
+COMPATIBLE_RUNTIMES="python2.7 python3.6 python3.7"
+ZIP_FILE_NAME="layer.zip"
+while getopts d:r:h OPT
+do
+  case $OPT in
+    d)
+      DESCRIPTION=${OPTARG}
+      ;;
+    r)
+      COMPATIBLE_RUNTIMES=${OPTARG}
+      ;;
+    z)
+      ZIP_FILE_NAME=${OPTARG}
+      ;;
+    h)
+      usage
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+if [ $# -ne 1 ]; then
+  echo "[ERROR] Input a layer name" 1>&2
+  echo "" 1>&2
+  usage
+fi
+LAYER_NAME=$1
+
+echo "mkdir python"
+mkdir python
+
+echo "cp *.py python/"
+cp *.py python/
+
+echo "pip install -r requirements.txt -t ./python/"
+pip install -r requirements.txt -t ./python/ > /dev/null 2>&1
+
+echo "rm -rf python/*.dist-info"
+rm -rf python/*.dist-info
+
+echo "zip -r ${ZIP_FILE_NAME} ./*"
+zip -r ${ZIP_FILE_NAME} ./python > /dev/null 2>&1
+
+echo "aws lambda publish-layer-version --layer-name ${LAYER_NAME} --description "'"'"${DESCRIPTION}"'"'" --compatible-runtimes ${COMPATIBLE_RUNTIMES} --zip-file fileb://${ZIP_FILE_NAME}"
+aws lambda publish-layer-version --layer-name ${LAYER_NAME} --description "${DESCRIPTION}" --compatible-runtimes ${COMPATIBLE_RUNTIMES} --zip-file fileb://${ZIP_FILE_NAME}
