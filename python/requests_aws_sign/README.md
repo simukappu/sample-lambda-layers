@@ -1,4 +1,4 @@
-# python/requests
+# python/requests_aws_sign
 Use Python library - requests_aws_sign
 
 ## Usage
